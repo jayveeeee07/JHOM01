@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Cart — JHOM</title>
+  <link rel="stylesheet" href="index.css">
+  <script src="app-config.js"></script>
+</head>
+<body>
+  <header class="header"><div class="brand"><img src="logo.jpg"> Cart</div><nav><a class="btn btn-outline" href="room.html">Rooms</a></nav></header>
+  <main class="container"><section class="card"><h2>Your Cart</h2></section><section id="cartList" class="grid"></section></main>
+  <footer class="footer">© 2025 JHOM</footer>
+
+  <script>
+    function lsget(k){return JSON.parse(localStorage.getItem(k)||'null')}
+    async function renderCart(){
+      const ids = lsget('cart')||[];
+      const out = document.getElementById('cartList');
+      if(!ids.length){ out.innerHTML = '<div class="card">Cart empty</div>'; return; }
+      try {
+        const res = await fetch(BACKEND_URL + '/rooms');
+        const rooms = await res.json();
+        const selected = rooms.filter(r => ids.includes(String(r.id)));
+        out.innerHTML = selected.map(r=>`
+          <div class="card">
+            <img src="${r.image||'placeholder1.jpg'}">
+            <strong>${r.name||'Room '+r.roomNumber}</strong>
+            <div class="kv">₱ ${Number(r.price||0).toLocaleString()}</div>
+            <div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-outline" onclick='remove("${r.id}")'>Remove</button><button class="btn btn-primary" onclick='book("${r.id}")'>Book Now</button></div>
+          </div>
+        `).join('');
+      } catch {
+        out.innerHTML = '<div class="kv">Error loading cart</div>';
+      }
+    }
+    function remove(id){ let c = lsget('cart')||[]; c = c.filter(x=>String(x)!==String(id)); localStorage.setItem('cart', JSON.stringify(c)); renderCart(); }
+    function book(id){ localStorage.setItem('selectedRoomId', id); location.href='booking.html'; }
+    renderCart();
+  </script>
+</body>
+</html>
