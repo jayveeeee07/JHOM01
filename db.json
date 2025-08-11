@@ -1,0 +1,7 @@
+{
+  "rooms": [
+    { "id": 1, "roomNumber": "101", "price": 1500, "image": "room1.jpg" },
+    { "id": 2, "roomNumber": "102", "price": 1800, "image": "room2.jpg" }
+  ],
+  "bookings": []
+}
