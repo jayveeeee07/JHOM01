@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin Panel — JHOM</title>
+  <link rel="stylesheet" href="index.css">
+  <script src="app-config.js"></script>
+</head>
+<body>
+  <header class="header"><div class="brand"><img src="logo.jpg"> Admin Panel</div><nav><a class="btn btn-outline" href="home.html">Public</a></nav></header>
+  <main class="container">
+    <section class="card">
+      <h3>Admin Access</h3>
+      <input class="input" type="password" id="adminPass" placeholder="Password (default: ADMIN)">
+      <div style="margin-top:8px"><button class="btn btn-primary" id="loginAdmin">Enter Admin</button></div>
+      <p class="kv">Passwords run client-side only — this is for convenience, not security.</p>
+    </section>
+
+    <div id="adminArea" style="display:none">
+      <section class="card"><h3>Bookings</h3><div id="bookingsList"></div></section>
+    </div>
+  </main>
+  <footer class="footer">© 2025 JHOM</footer>
+
+  <script>
+    document.getElementById('loginAdmin').onclick = () => {
+      const pw = document.getElementById('adminPass').value;
+      const SECRET = 'ADMIN'; // change locally before sharing
+      if(pw !== SECRET){ alert('Wrong password'); return; }
+      document.getElementById('adminArea').style.display='block';
+      document.getElementById('adminPass').parentElement.style.display='none';
+      loadBookings();
+    };
+
+    async function loadBookings(){
+      const out = document.getElementById('bookingsList');
+      try {
+        const res = await fetch(BACKEND_URL + '/bookings');
+        const bs = await res.json();
+        if(!bs.length){ out.innerHTML = '<div class="kv">No bookings yet</div>'; return; }
+        out.innerHTML = bs.map(b=>`
+          <div class="card">
+            <div style="display:flex;justify-content:space-between"><div><strong>${b.fullName}</strong><div class="kv">${b.room?.name||b.roomName}</div></div><div class="badge">${b.status}</div></div>
+            <div class="kv">Ref: ${b.ticketRef||''}, Check-in: ${b.checkIn}</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn btn-primary" onclick='updateBooking("${b.id}","Approved")'>Approve</button>
+              <button class="btn btn-outline" onclick='updateBooking("${b.id}","Rejected")'>Reject</button>
+              <button class="btn" onclick='viewBooking("${b.id}")'>View</button>
+            </div>
+          </div>
+        `).join('');
+      } catch {
+        out.innerHTML = '<div class="kv">Failed to load bookings</div>';
+      }
+    }
+
+    async function updateBooking(id, status){
+      const pin = status === 'Approved' ? Math.random().toString(36).slice(2,8).toUpperCase() : '';
+      try {
+        const res = await fetch(BACKEND_URL + '/bookings/' + id, {
+          method:'PATCH',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ status, pin })
+        });
+        const data = await res.json();
+        if(data.success){ alert('Updated'); loadBookings(); }
+        else alert('Error');
+      } catch {
+        alert('Network error');
+      }
+    }
+
+    async function viewBooking(id){
+      try {
+        const res = await fetch(BACKEND_URL + '/bookings');
+        const bs = await res.json();
+        const b = bs.find(x => String(x.id) === String(id));
+        alert(JSON.stringify(b, null, 2));
+      } catch {
+        alert('Error');
+      }
+    }
+  </script>
+</body>
+</html>
