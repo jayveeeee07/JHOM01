@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>JHOM — Account</title>
+  <link rel="stylesheet" href="index.css">
+  <script src="app-config.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="brand"><img src="logo.jpg" alt="logo"> JHOM</div>
+    <nav><a class="btn btn-outline" href="home.html">Home</a><a class="btn btn-outline" href="room.html">Rooms</a></nav>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <input class="input" name="email" type="email" placeholder="Email" required>
+        <input class="input" name="password" type="password" placeholder="Password" required>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button class="btn btn-primary" type="submit">Login</button>
+          <button id="showRegister" type="button" class="btn btn-outline">Register</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" id="registerSection">
+      <h2>Register</h2>
+      <form id="registerForm">
+        <input class="input" name="fullname" placeholder="Full name" required>
+        <input class="input" name="email" type="email" placeholder="Email" required>
+        <input class="input" name="password" type="password" placeholder="Password (min 4)" required>
+        <div style="margin-top:8px"><button class="btn" type="submit">Create account</button></div>
+      </form>
+      <small class="kv">Accounts stored locally. Admin login via Admin Panel.</small>
+    </section>
+  </main>
+
+  <footer class="footer">© 2025 JHOM</footer>
+
+  <script>
+    function lsget(k){return JSON.parse(localStorage.getItem(k)||'null')}
+    function lsset(k,v){localStorage.setItem(k,JSON.stringify(v))}
+    if(!lsget('users')){
+      lsset('users', [{id:'u_admin',fullname:'Admin',email:'admin@local',password:'ADMIN',role:'admin'}]);
+    }
+
+    document.getElementById('loginForm').onsubmit = e => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const email = (f.get('email') || '').toLowerCase();
+      const pwd = f.get('password') || '';
+      const users = lsget('users') || [];
+      const u = users.find(x => x.email.toLowerCase() === email && x.password === pwd);
+      if(!u){ alert('Invalid credentials'); return; }
+      lsset('currentUser', {id:u.id,fullname:u.fullname,email:u.email,role:u.role});
+      alert('Logged in as ' + u.fullname);
+      location.href = 'home.html';
+    };
+
+    document.getElementById('registerForm').onsubmit = e => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const fullname = (f.get('fullname')||'').trim();
+      const email = (f.get('email')||'').toLowerCase().trim();
+      const pwd = f.get('password')||'';
+      if(pwd.length < 4){ alert('Password too short'); return; }
+      let users = lsget('users') || [];
+      if(users.find(u => u.email.toLowerCase() === email)){ alert('Email already registered'); return; }
+      const id = 'u_' + Date.now();
+      const u = { id, fullname, email, password: pwd, role: 'user' };
+      users.push(u);
+      lsset('users', users);
+      lsset('currentUser', {id:u.id,fullname:u.fullname,email:u.email,role:u.role});
+      alert('Registered and logged in');
+      location.href = 'home.html';
+    };
+
+    document.getElementById('showRegister').onclick = ()=> document.getElementById('registerSection').scrollIntoView({behavior:'smooth'});
+  </script>
+</body>
+  </html>
